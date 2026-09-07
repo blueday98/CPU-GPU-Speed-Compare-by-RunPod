@@ -30,6 +30,16 @@ class DispatcherTests(unittest.TestCase):
             self.payload["result_prefix"], "jobs/job-1/video-analysis/try-1"
         )
 
+    def test_can_attach_ephemeral_transfer_envelope(self):
+        transfer = {"input_url": "signed", "upload_urls": {}}
+        payload = build_request(
+            job_id="job-1", attempt_id="try-1", model_id="model",
+            model_release="release", source_sha256={"a": "a" * 64},
+            model_sha256={"b": "b" * 64}, input_object_name="input.mp4",
+            input_etag="etag", input_bytes=1, transfer=transfer,
+        )
+        self.assertIs(payload["transfer"], transfer)
+
     def test_accepts_only_matching_completion(self):
         def opener(request, **kwargs):
             body = json.loads(request.data)

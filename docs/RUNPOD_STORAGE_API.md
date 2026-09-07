@@ -8,11 +8,9 @@ RunPod을 켜기 전까지는 GPU·OCI 통합 성공을 주장하지 않는다. 
 
 - RUNPOD_SHARED_TOKEN
 - COACH_CODE_ROOT, COACH_MODEL_ROOT, MODEL_RELEASE
-- OCI_CONFIG_FILE, 선택적 OCI_CONFIG_PROFILE·OCI_NAMESPACE
-- OCI_RAW_BUCKET, OCI_RESULTS_BUCKET
 - 선택적 VIDEO_ANALYSIS_TIMEOUT
 
-OCI 자격증명은 저장소나 이미지에 포함하지 않는다. 실제 통합 전에는 전용 최소권한 principal 또는 제한된 만료 URL 방식 중 하나를 정하고, raw bucket 읽기와 지정 results prefix 쓰기만 허용한다.
+RunPod에는 OCI config나 API 개인키를 배치하지 않는다. OCI dispatcher가 attempt마다 입력 ObjectRead URL과 산출물 4개의 ObjectWrite URL을 짧은 TTL로 발급한다. URL은 요청의 `transfer` envelope에만 포함하고 manifest·DB·로그·공개 증거에는 저장하지 않는다.
 
 ```bash
 python -m uvicorn coach_storage_video_analysis_api:app \

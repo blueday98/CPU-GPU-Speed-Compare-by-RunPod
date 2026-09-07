@@ -255,3 +255,5 @@ OCI Pod transport 후보는 HTTPS Authorization 헤더로 계약 요청을 전�
 ## 21. 팀 DB·Celery 통합 후보와 릴리스 자기검증
 
 격리된 팀 저장소 worktree에 입력 ETag·크기 snapshot, GPU attempt migration, `gpu_dispatch`와 `postprocess` 큐, HPE를 호출하지 않는 후처리 전용 진입점을 연결했다. Worker 테스트 33개와 변경 관련 API DB 테스트 18개, Compose·Python·셸 구문 검사를 통과했다. RunPod API도 시작 시 실제 HPE 소스 3개와 ONNX 2개의 SHA-256을 계산하고 요청의 릴리스 증거와 일치하지 않으면 실행 전에 거부하도록 보강했으며 공개 후보 전체 단위 시험은 21개를 통과했다. 실제 OCI migration, Object Storage 왕복, CUDA 실행, 사이트·Grafana 검증은 아직 수행하지 않았다.
+
+운영 OCI Console 권한이 없는 팀원이 장기 API 키를 RunPod에 복사하지 않도록 인증 경계를 다시 수정했다. 기존 API의 PAR 발급 기능을 이용해 입력 읽기 URL 하나와 결과 객체별 쓰기 URL 네 개를 attempt마다 생성한다. RunPod은 OCI 도메인의 만료 URL만 허용하며 URL을 완료 manifest에 넣지 않는다. 이 변경 후 공개 후보 23개, 팀 Worker 34개, API DB 18개 테스트를 통과했다.

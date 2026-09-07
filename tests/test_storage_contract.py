@@ -1,6 +1,6 @@
 import copy
 import unittest
-from storage_contract import FILES, MANIFEST, REQUEST, validate_manifest
+from storage_contract import FILES, MANIFEST, REQUEST, validate_manifest, validate_transfer
 
 
 class StorageContractTests(unittest.TestCase):
@@ -55,3 +55,17 @@ class StorageContractTests(unittest.TestCase):
         self.manifest["execution"]["provider"] = "CPUExecutionProvider"
         with self.assertRaises(ValueError):
             validate_manifest(self.manifest, self.request)
+
+    def test_transfer_requires_oci_https_urls_and_exact_roles(self):
+        base = "https://objectstorage.ap-seoul-1.oraclecloud.com/p/token"
+        transfer = {
+            "input_url": base + "/input",
+            "upload_urls": {
+                role: base + "/" + role
+                for role in ("predictions", "details", "video", "manifest")
+            },
+        }
+        validate_transfer(transfer)
+        transfer["input_url"] = "http://127.0.0.1/private"
+        with self.assertRaises(ValueError):
+            validate_transfer(transfer)

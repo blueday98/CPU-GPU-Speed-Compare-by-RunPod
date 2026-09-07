@@ -12,8 +12,10 @@ import math
 from pathlib import Path
 import tempfile
 import time
+from urllib.error import HTTPError, URLError
+from urllib.request import Request, urlopen
 
-from storage_contract import MANIFEST, validate_manifest, validate_request
+from storage_contract import MANIFEST, validate_manifest, validate_request, validate_transfer
 
 
 MAX_INPUT_BYTES = 512 * 1024 * 1024
@@ -230,3 +232,60 @@ class OCIStore:
                 put_object_body=body,
                 content_type=content_type,
             )
+
+
+class SignedURLStore:
+    """Transfer only through short-lived, object-scoped HTTPS URLs."""
+
+    def __init__(self, transfer: dict, opener=urlopen):
+        validate_transfer(transfer)
+        self.input_url = transfer["input_url"]
+        self.upload_urls = transfer["upload_urls"]
+        self.opener = opener
+
+    def download_input(self, object_name: str, destination: Path, expected_bytes: int, etag: str):
+        del object_name
+        request = Request(self.input_url, headers={"If-Match": etag}, method="GET")
+        total = 0
+        try:
+            with self.opener(request, timeout=300) as response:
+                with destination.open("xb") as output:
+                    while True:
+                        chunk = response.read(1024 * 1024)
+                        if not chunk:
+                            break
+                        total += len(chunk)
+                        if total > expected_bytes:
+                            raise ValueError("input exceeds declared size")
+                        output.write(chunk)
+        except (HTTPError, URLError) as error:
+            raise RuntimeError(f"signed input download failed: {error}") from error
+
+    def upload_result(self, object_name: str, source: Path, content_type: str):
+        role = self._role_for(object_name)
+        request = Request(
+            self.upload_urls[role],
+            data=source.read_bytes(),
+            headers={"Content-Type": content_type},
+            method="PUT",
+        )
+        try:
+            with self.opener(request, timeout=300) as response:
+                if getattr(response, "status", 200) not in (200, 201):
+                    raise RuntimeError(f"signed upload failed: HTTP {response.status}")
+        except (HTTPError, URLError) as error:
+            raise RuntimeError(f"signed upload failed: {error}") from error
+
+    @staticmethod
+    def _role_for(object_name: str) -> str:
+        filename = Path(object_name).name
+        roles = {
+            "pose_predictions.json": "predictions",
+            "details.json": "details",
+            "rendered.mp4": "video",
+            "pose_manifest.json": "manifest",
+        }
+        try:
+            return roles[filename]
+        except KeyError as error:
+            raise ValueError(f"unexpected upload object: {object_name}") from error

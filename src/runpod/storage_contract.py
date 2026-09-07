@@ -1,6 +1,7 @@
 """Validate v2 metadata only; callers must verify actual objects and contents."""
 import math
 import re
+from urllib.parse import urlparse
 
 REQUEST = "video-analysis-request-2.0"
 MANIFEST = "video-analysis-manifest-2.0"
@@ -11,6 +12,7 @@ FILES = {
     "details": ("details.json", "application/json"),
     "video": ("rendered.mp4", "video/mp4"),
 }
+UPLOAD_ROLES = (*FILES.keys(), "manifest")
 
 
 def require(condition, message):
@@ -54,7 +56,33 @@ def validate_request(request):
     input_meta(request.get("input"))
     prefix = f"jobs/{request['job_id']}/video-analysis/{request['attempt_id']}"
     require(request.get("result_prefix") == prefix, "result prefix mismatch")
+    transfer = request.get("transfer")
+    if transfer is not None:
+        validate_transfer(transfer)
     return prefix
+
+
+def validate_transfer(transfer):
+    require(isinstance(transfer, dict), "transfer must be an object")
+    input_url = transfer.get("input_url")
+    uploads = transfer.get("upload_urls")
+    require(_https_url(input_url), "invalid signed input URL")
+    require(isinstance(uploads, dict) and set(uploads) == set(UPLOAD_ROLES),
+            "invalid signed upload URL set")
+    require(all(_https_url(value) for value in uploads.values()),
+            "invalid signed upload URL")
+
+
+def _https_url(value):
+    if not isinstance(value, str):
+        return False
+    parsed = urlparse(value)
+    hostname = (parsed.hostname or "").lower()
+    return (
+        parsed.scheme == "https"
+        and hostname.endswith(".oraclecloud.com")
+        and not parsed.username
+    )
 
 
 def validate_manifest(manifest, request):

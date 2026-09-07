@@ -11,9 +11,9 @@ from urllib.request import Request, urlopen
 
 def build_request(*, job_id, attempt_id, model_id, model_release,
                   source_sha256, model_sha256, input_object_name,
-                  input_etag, input_bytes):
+                  input_etag, input_bytes, transfer=None):
     prefix = f"jobs/{job_id}/video-analysis/{attempt_id}"
-    return {
+    request = {
         "schema_version": "video-analysis-request-2.0",
         "job_id": job_id,
         "attempt_id": attempt_id,
@@ -28,6 +28,9 @@ def build_request(*, job_id, attempt_id, model_id, model_release,
         },
         "result_prefix": prefix,
     }
+    if transfer is not None:
+        request["transfer"] = transfer
+    return request
 
 
 class RunPodPodClient:

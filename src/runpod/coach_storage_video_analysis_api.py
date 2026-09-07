@@ -16,7 +16,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 
 from storage_video_analysis import (
-    OCIStore,
+    SignedURLStore,
     load_release_evidence,
     publish_video_analysis,
     validate_release_request,
@@ -73,7 +73,6 @@ def encode_nvenc(source: Path, destination: Path) -> None:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    import oci
     import onnxruntime as ort
     import torch
 
@@ -88,22 +87,11 @@ async def lifespan(app: FastAPI):
 
     code_root = Path(os.environ["COACH_CODE_ROOT"]).resolve()
     model_root = Path(os.environ["COACH_MODEL_ROOT"]).resolve()
-    config = oci.config.from_file(
-        os.environ["OCI_CONFIG_FILE"], os.getenv("OCI_CONFIG_PROFILE", "DEFAULT")
-    )
-    client = oci.object_storage.ObjectStorageClient(config)
-    namespace = os.getenv("OCI_NAMESPACE") or client.get_namespace().data
     runtime = SimpleNamespace(
         token=token,
         code_root=code_root,
         model_root=model_root,
         engine=WarmEngine(code_root, model_root),
-        store=OCIStore(
-            client,
-            namespace,
-            os.environ["OCI_RAW_BUCKET"],
-            os.environ["OCI_RESULTS_BUCKET"],
-        ),
         gpu_name=torch.cuda.get_device_name(0),
         providers=providers,
         timeout=float(os.getenv("VIDEO_ANALYSIS_TIMEOUT", "3600")),
@@ -167,7 +155,7 @@ def video_analysis(request: dict):
         validate_release_request(request, runtime.release, runtime.model_release)
         result = publish_video_analysis(
             request,
-            runtime.store,
+            SignedURLStore(request.get("transfer")),
             execute,
             encode_nvenc,
             inspect_h264,

@@ -29,8 +29,9 @@ JSON 필드:
 - source_sha256, model_sha256: 비어 있지 않은 파일명→SHA-256 맵
 - input: object_name, etag, bytes
 - result_prefix: `jobs/{job_id}/video-analysis/{attempt_id}`
+- transfer: OCI가 발급한 input_url과 predictions·details·video·manifest별 upload_urls. 모두 HTTPS OCI Object Storage URL이며 manifest에는 복사하지 않는다.
 
-input 객체는 API가 소유권을 확인한 뒤 요청한다. Worker는 임의 경로/URL을 받아 다운로드하지 않는다. 버킷은 배포 설정으로 고정한다. 인증 수단은 제한된 자격증명 또는 만료 URL로 별도 제공하며 이 계약·로그·공개 증거에 저장하지 않는다. 사용자 키와 LLM 키는 OCI에 남는다.
+input 객체는 API가 소유권을 확인한 뒤 요청한다. RunPod은 OCI 도메인의 객체별 만료 URL만 사용하며 임의 호스트 URL은 거부한다. URL은 자격증명이므로 로그·manifest·DB·공개 증거에 저장하지 않는다. 사용자 키와 LLM 키는 OCI에 남는다.
 
 ## 완료 manifest
 
