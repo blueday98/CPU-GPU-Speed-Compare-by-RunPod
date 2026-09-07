@@ -257,3 +257,22 @@ OCI Pod transport 후보는 HTTPS Authorization 헤더로 계약 요청을 전�
 격리된 팀 저장소 worktree에 입력 ETag·크기 snapshot, GPU attempt migration, `gpu_dispatch`와 `postprocess` 큐, HPE를 호출하지 않는 후처리 전용 진입점을 연결했다. Worker 테스트 33개와 변경 관련 API DB 테스트 18개, Compose·Python·셸 구문 검사를 통과했다. RunPod API도 시작 시 실제 HPE 소스 3개와 ONNX 2개의 SHA-256을 계산하고 요청의 릴리스 증거와 일치하지 않으면 실행 전에 거부하도록 보강했으며 공개 후보 전체 단위 시험은 21개를 통과했다. 실제 OCI migration, Object Storage 왕복, CUDA 실행, 사이트·Grafana 검증은 아직 수행하지 않았다.
 
 운영 OCI Console 권한이 없는 팀원이 장기 API 키를 RunPod에 복사하지 않도록 인증 경계를 다시 수정했다. 기존 API의 PAR 발급 기능을 이용해 입력 읽기 URL 하나와 결과 객체별 쓰기 URL 네 개를 attempt마다 생성한다. RunPod은 OCI 도메인의 만료 URL만 허용하며 URL을 완료 manifest에 넣지 않는다. 이 변경 후 공개 후보 23개, 팀 Worker 34개, API DB 18개 테스트를 통과했다.
+
+## 22. 운영 사이트 전체 경로 검증
+
+2026-09-08 KST에 팀 저장소 PR #23으로 Object Storage 기반 RunPod 파이프라인을 병합하고, PR #24에서 RunPod 프록시가 허용하는 명시적 User-Agent를 추가했다. 첫 운영 작업 `e903648a-6a3f-4bef-af64-40b330c24a35`는 PostgreSQL UUID를 JSON에 직접 넣어 RunPod 호출 전에 실패했다. PR #25는 계약 경계에서 Job ID와 attempt ID를 문자열로 정규화하고 실제 UUID 객체를 사용한 회귀 시험을 추가했다.
+
+PR #25 병합 커밋 `adc592aabd1032b19dceeb965df89a05c50ec5a3`의 최초 배포는 OCI self-hosted Actions runner의 디스크가 97% 사용 중이어서 중단됐다. 24시간보다 오래된 미사용 Docker 이미지·빌드 캐시와 오래된 runner 진단 로그를 정리해 17GB를 확보한 뒤 재배포했다. 불변 릴리스 배포와 운영 checkout 승격은 성공했고, systemd unit 동기화만 기존 passwordless sudo 미설정으로 실패했다.
+
+같은 720p·60fps 입력을 사이트에서 `runpod-e2e-adc592a`로 다시 실행했다. 작업 `44c9e8f8-2941-4e48-96e3-5a994b9d14c2`는 OCI 업로드, `gpu_dispatch`, RunPod 전체 `video_analysis`, 시도별 Object Storage 산출물·manifest, OCI `postprocess`, DB 완료 상태와 사이트 결과 표시까지 모두 통과했다.
+
+Grafana `Runners Feed / Job Stage Performance`에서 다음 값을 확인했다.
+
+| 항목 | 운영 측정값 |
+|---|---:|
+| 상태 | SUCCESS |
+| 총 처리시간 | 24.6초 |
+| 큐 대기시간 | 107.956ms |
+| `video_analysis` | 5.8초 |
+
+이 측정으로 후보 구현이 아니라 실제 운영 사이트의 OCI→RunPod→OCI 경로가 끝까지 동작하고 단계 시간이 수집됨을 확인했다. 다만 운영 표본은 아직 1건이므로 성능 분포와 성공률을 판단하려면 같은 입력 반복 및 여러 길이·FPS 입력의 추가 표본이 필요하다.

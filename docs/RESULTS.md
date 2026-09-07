@@ -47,3 +47,19 @@ CPU 후보의 `libx264 CRF23`과 GPU의 `h264_nvenc CQ23`은 이름이 비슷해
 격리 테스트 기준으로 `video_analysis` 전체 작업은 GPU가 개선 CPU보다도 30.75~76.39% 빨랐다. HPE 실행 내용은 현재 운영 기본 진입점과 동일하지만, 이것은 모델 플러그인의 공식 활성화나 Runner’s Feed 사이트·Grafana에 배포한 결과가 아니다. 기술적 성능 가능성 자료로 사용하고, 공식 전환 후 사이트에서 최종 확인한다.
 
 세부 수치는 `../evidence/cpu_stream_final_evidence.json`과 `../evidence/cpu_gpu_video_analysis_final_evidence.json`, 반복 문제는 `ISSUES.md`에 보존했다.
+
+## 운영 통합 검증
+
+2026-09-08 KST에 팀 저장소 릴리스 `sha-adc592aabd1032b19dceeb965df89a05c50ec5a3`를 OCI에 배포하고 RunPod API의 `MODEL_RELEASE`도 같은 값으로 맞췄다. 사이트에서 `720p_60fps_crf18.mp4`를 사용한 작업 `44c9e8f8-2941-4e48-96e3-5a994b9d14c2`가 완료됐다.
+
+| Grafana 항목 | 값 |
+|---|---:|
+| 작업 상태 | SUCCESS |
+| 총 처리시간 | 24.6초 |
+| 큐 대기시간 | 107.956ms |
+| 가장 느린 단계 | `video_analysis` |
+| `video_analysis` 처리시간 | 5.8초 |
+
+이 결과는 격리 시험과 달리 실제 사이트, OCI API·DB·Celery, scoped signed URL 기반 Object Storage 전송, RunPod GPU 분석, OCI 후처리와 결과 표시를 모두 포함한다. 운영 Prometheus 지표도 완료 1건, 성공 1건, 실패 0건, 성공률 1.0, 평균 처리시간 24.630824초를 기록했다.
+
+현재 운영 통합 표본은 1건이므로 위 값만으로 평균 성능을 확정하지 않는다. 다음 검증에서는 동일 영상 반복 실행과 30fps·긴 영상 표본을 추가해 총 처리시간, `video_analysis`, 네트워크·큐 오버헤드와 결과 품질을 함께 비교한다.
