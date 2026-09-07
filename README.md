@@ -1,6 +1,6 @@
 # OCI CPU / RunPod GPU 영상 분석 성능 검증
 
-동일한 두 영상을 OCI CPU와 RunPod RTX 2000 Ada GPU에서 처리하여 `video_analysis` 전체 시간을 비교한 격리 시험 기록이다. CPU 시험은 당시 운영 Worker 이미지의 격리 복사본에서 실행했으며 Runner's Feed 운영 작업 처리기, DB, Grafana는 변경하지 않았다.
+동일 영상을 OCI CPU와 RunPod RTX 2000 Ada GPU에서 처리해 `video_analysis` 시간을 비교하고, 이후 Runner's Feed 운영 사이트에 Object Storage 기반 GPU 경로를 적용한 기록이다. 격리 성능 시험과 실제 운영 통합 결과를 구분해 보존한다.
 
 ## 결과
 
@@ -13,6 +13,25 @@
 
 CPU 개선은 OpenCV 중간 영상을 제거하고 렌더링 프레임을 FFmpeg `libx264 veryfast CRF23`으로 직접 전달한다. GPU는 모델을 한 번만 적재하는 CUDA 프로세스와 `h264_nvenc p4 cq23`을 사용했다.
 
+## 운영 통합 현황
+
+2026-09-08 팀 저장소 릴리스 `sha-0418518c7844fe6279f8f0761c8ba9c827cf60fe`에서 OCI API·DB·Celery, scoped signed URL 기반 Object Storage 전송, RunPod 전체 `video_analysis`, OCI 후처리와 사이트 결과 표시를 연결했다. RunPod은 NVIDIA RTX 2000 Ada와 `CUDAExecutionProvider`를 사용하며 `GPU_DISPATCH_CONCURRENCY=1`로 순차 측정했다.
+
+| 운영 입력 | 결과 | 총 처리시간 | 큐 대기 | 확인된 병목 |
+|---|---|---:|---:|---|
+| 동일 720p·60fps·255프레임 반복 | SUCCESS | 24.8초 | 111.164ms | `video_analysis` 4.8초 |
+| 720p·25fps·136프레임 | SUCCESS | 18.8초 | 45.934ms | 입력 다운로드 3.0초 |
+| 720p·30fps·1,105프레임·36.83초 | SUCCESS | 44.1초 | 34.492ms | `video_analysis` 17.6초 |
+
+새 릴리스 운영 표본 세 건은 모두 성공했고 평균 처리시간은 약 29.22초였다. 동일 60fps 입력의 이전 24.6초와 반복 24.8초 차이는 약 0.8%였다. 세부 Job ID와 장애·복구 이력은 [실험 전체 이력](docs/PROJECT_HISTORY.md), 단계별 결과는 [상세 결과](docs/RESULTS.md)에 기록했다.
+
+팀 저장소 반영은 다음 PR에서 확인할 수 있다.
+
+- [#23 Object Storage 기반 RunPod 영상 분석 파이프라인](https://github.com/Temu-F4/Runners_Feed/pull/23)
+- [#24 RunPod 프록시 User-Agent 적용](https://github.com/Temu-F4/Runners_Feed/pull/24)
+- [#25 GPU 계약 UUID 문자열 정규화](https://github.com/Temu-F4/Runners_Feed/pull/25)
+- [#26 systemd 멱등 동기화와 운영 디스크 보호](https://github.com/Temu-F4/Runners_Feed/pull/26)
+
 ## 정확성
 
 - CPU 기존/개선 방식의 자세 예측 JSON은 영상별로 완전히 동일했다.
@@ -24,13 +43,13 @@ CPU 개선은 OpenCV 중간 영상을 제거하고 렌더링 프레임을 FFmpeg
 
 ## 폴더
 
-후속 구현: [후처리 전용 실행과 Object Storage 연결](docs/POSTPROCESS_IMPLEMENTATION.md). 로컬 검증을 마친 통합 후보이며 실제 OCI·RunPod·사이트 배포 검증은 남아 있다.
+후속 구현: [후처리 전용 실행과 Object Storage 연결](docs/POSTPROCESS_IMPLEMENTATION.md). 이 후보를 기준으로 팀 저장소 운영 경로를 구현하고 사이트 통합 검증까지 완료했다.
 
-RunPod 게시 경로: [Object Storage API 후보](docs/RUNPOD_STORAGE_API.md). warm CUDA 분석과 NVENC 결과를 계약 v2 manifest로 게시하도록 구성했다.
+RunPod 게시 경로: [Object Storage API](docs/RUNPOD_STORAGE_API.md). warm CUDA 분석과 NVENC 결과를 계약 v2 manifest로 게시한다.
 
-OCI 요청 경로: [OCI→RunPod dispatcher 후보](docs/OCI_DISPATCHER.md). 서비스 Job과 GPU 시도를 분리하고 일치하는 manifest 응답만 후처리로 넘긴다.
+OCI 요청 경로: [OCI→RunPod dispatcher](docs/OCI_DISPATCHER.md). 서비스 Job과 GPU 시도를 분리하고 일치하는 manifest 응답만 후처리로 넘긴다.
 
-후속 정식 통합 설계: [Object Storage 기반 요청·manifest 계약 v2](docs/OBJECT_STORAGE_CONTRACT.md). 현재는 계약과 메타데이터 검증 코드까지 작성한 단계이며, 기존 성능 수치는 새 경로의 운영 측정값이 아니다.
+정식 통합 설계: [Object Storage 기반 요청·manifest 계약 v2](docs/OBJECT_STORAGE_CONTRACT.md). 격리 성능 수치와 운영 측정값은 포함 범위가 다르므로 직접 같은 값으로 취급하지 않는다.
 
 - `src/cpu`: CPU 직접 스트리밍 후보 코드
 - `src/runpod`: RunPod 분석 API, 계약 검증, warm 모델 프로세스
@@ -53,10 +72,10 @@ OCI 요청 경로: [OCI→RunPod dispatcher 후보](docs/OCI_DISPATCHER.md). 서
 
 ## 한계
 
-이 결과는 기술적 격리 시험이며 Runner's Feed 사이트나 Grafana에 정식 배포한 결과가 아니다. 특징값 계산과 코칭 리포트 생성도 포함하지 않는다. 운영 적용에는 조장 승인과 최신 작업 처리기 코드 기준의 정식 검토·배포가 필요하다.
+상단 CPU/GPU 직접 비교 수치는 기술적 격리 시험이고, 운영 통합 표의 시간은 사이트·Object Storage·DB·큐·후처리를 포함한다. 두 범위의 수치를 동일한 벤치마크로 직접 비교하면 안 된다. 현재 사이트 베타는 완료 여부만 노출하며 측정값과 코칭 결과는 품질 승인 후 제공할 예정이다.
 
-CPU 격리 시험 이미지는 `sha-d3753fc9...`였고, 2026-09-07 확인한 운영 이미지는 `sha-6743f353...`였다. 최신 배포에는 `sehyeon-dcc2d7d` 플러그인이 포함됐지만, 품질 승인 전 보호 설정에 따라 실제 HPE 진입점은 기본 `coach/scripts/hpe/hpe.py`(SHA-256 `12e86ead...`)로 유지된다. 플러그인 HPE(공백 제외 비교)는 기본 HPE와 실행 내용이 동일하고 ONNX 가중치 해시도 일치하므로 기존 성능 시험이 다른 HPE 알고리즘을 사용한 것은 아니다. 그래도 최신 운영 이미지 자체를 대상으로 한 사이트·Grafana 최종 검증은 아직 완료되지 않았다.
+CPU 격리 시험 이미지는 `sha-d3753fc9...`였고 현재 운영 통합 검증 릴리스는 `sha-0418518...`이다. 배포에는 `sehyeon-dcc2d7d` 플러그인이 포함됐지만, 품질 승인 전 보호 설정에 따라 실제 HPE 진입점은 기본 경로를 유지한다. 플러그인 HPE는 공백 제외 비교에서 기본 HPE와 실행 내용이 동일하고 ONNX 가중치 해시도 일치한다. 모델 골든 품질 승인과 25fps·30fps 입력의 CPU/GPU 결과 동일성 평가는 별도 과제로 남아 있다.
 
-모델 가중치, 원본 영상, 인증 토큰, SSH 키, 운영 주소는 저장소에 포함하지 않는다. 기반 코드와 모델을 공개할 때는 원본 저장소의 라이선스도 확인해야 한다.
+모델 가중치, 원본 영상, 인증 토큰과 SSH 키는 저장소에 포함하지 않는다. 기반 코드와 모델을 공개할 때는 원본 저장소의 라이선스도 확인해야 한다.
 
 개인 GitHub 게시 절차는 `docs/GITHUB.md`, 재현 조건은 `docs/REPRODUCE.md`에 정리했다. 코드 출처와 공개 범위는 `NOTICE.md`를 따른다.
