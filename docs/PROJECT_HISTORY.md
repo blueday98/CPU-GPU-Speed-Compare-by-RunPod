@@ -56,7 +56,7 @@ Runner's Feed의 영상 처리 작업은 처음에는 9개 단계로 관찰됐�
 
 ## 3. RunPod GPU 환경 확인
 
-가장 저렴한 후보였던 NVIDIA RTX 2000 Ada Generation에서 다음 환경을 확인했다.
+가장 저렴한 후보였던 NVIDIA RTX 2000 Ada Generation에서 다음 환경을 확인했다.(시간당 0.24$)
 
 ```text
 PyTorch 2.8.0+cu128
