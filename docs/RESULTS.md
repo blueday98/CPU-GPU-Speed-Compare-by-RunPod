@@ -63,3 +63,7 @@ CPU 후보의 `libx264 CRF23`과 GPU의 `h264_nvenc CQ23`은 이름이 비슷해
 이 결과는 격리 시험과 달리 실제 사이트, OCI API·DB·Celery, scoped signed URL 기반 Object Storage 전송, RunPod GPU 분석, OCI 후처리와 결과 표시를 모두 포함한다. 운영 Prometheus 지표도 완료 1건, 성공 1건, 실패 0건, 성공률 1.0, 평균 처리시간 24.630824초를 기록했다.
 
 현재 운영 통합 표본은 1건이므로 위 값만으로 평균 성능을 확정하지 않는다. 다음 검증에서는 동일 영상 반복 실행과 30fps·긴 영상 표본을 추가해 총 처리시간, `video_analysis`, 네트워크·큐 오버헤드와 결과 품질을 함께 비교한다.
+
+## 운영 안정화 결과
+
+후속 팀 저장소 PR #26과 릴리스 `sha-0418518c7844fe6279f8f0761c8ba9c827cf60fe`에서 운영 배포의 Docker 디스크 guard와 멱등 systemd 동기화를 적용했다. 네 운영 timer가 모두 `enabled`·`active`이며, 새 Release workflow는 마지막 systemd 단계까지 전체 성공했다. RunPod API도 같은 릴리스 값으로 재기동한 뒤 GPU·CUDA provider와 `video-analysis-request-2.0` health를 확인했다.

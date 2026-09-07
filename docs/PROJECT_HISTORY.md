@@ -276,3 +276,16 @@ Grafana `Runners Feed / Job Stage Performance`에서 다음 값을 확인했다.
 | `video_analysis` | 5.8초 |
 
 이 측정으로 후보 구현이 아니라 실제 운영 사이트의 OCI→RunPod→OCI 경로가 끝까지 동작하고 단계 시간이 수집됨을 확인했다. 다만 운영 표본은 아직 1건이므로 성능 분포와 성공률을 판단하려면 같은 입력 반복 및 여러 길이·FPS 입력의 추가 표본이 필요하다.
+
+## 23. 운영 배포 안정화
+
+팀 저장소 PR #26에서 systemd unit 동기화를 멱등화하고 Production 이미지 Pull 전 Docker 디스크 guard를 연결했다. 저장소 unit과 운영 unit이 같고 네 timer가 이미 활성 상태이면 배포 계정이 sudo를 호출하지 않는다. unit이 실제로 바뀌거나 timer가 비활성 상태일 때만 Production 관리자 동기화가 필요하다.
+
+OCI 관리자 동기화 후 다음 timer가 모두 `enabled`와 `active`임을 확인했다.
+
+- `runners-feed-cert-renew.timer`
+- `runners-feed-db-backup.timer`
+- `runners-feed-db-backup-verify.timer`
+- `runners-feed-model-quality-watchdog.timer`
+
+PR #26은 필수 검사 6개를 통과한 뒤 `main` 병합 커밋 `0418518c7844fe6279f8f0761c8ba9c827cf60fe`가 됐다. 해당 릴리스는 이미지 build·test·push, OCI 불변 릴리스 배포, 운영 checkout 승격과 마지막 systemd 동기화까지 모두 성공했다. RunPod API도 같은 `MODEL_RELEASE`로 재기동하고 CUDA health 응답을 확인했다.
