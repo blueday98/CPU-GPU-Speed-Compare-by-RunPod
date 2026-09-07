@@ -24,6 +24,7 @@ echo
 export RUNPOD_SHARED_TOKEN
 export COACH_CODE_ROOT=/your/coach
 export COACH_MODEL_ROOT=/your/models
+export MODEL_RELEASE=sha-your-immutable-image
 export RUNPOD_FINAL_ENCODER=h264_nvenc
 python -m uvicorn coach_video_analysis_api:app --app-dir src/runpod --host 127.0.0.1 --port 18001
 ```

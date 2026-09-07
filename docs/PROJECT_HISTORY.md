@@ -235,3 +235,23 @@ GPU 반복 실행 두 번은 동일한 예측 해시를 생성했다. 60fps 입�
 - 29.97fps 입력의 CPU/CUDA 경계 결과 차이는 미해결이다.
 - 최신 피처와 골든 품질 승인이 완료되기 전에는 모델 플러그인을 운영에 강제 적용하지 않는다.
 - 운영 적용과 Grafana 최종 검증은 조장 승인 후 공식 배포 절차로 수행해야 한다.
+
+## 17. 정식 통합을 위한 처리 경계 재확인
+
+팀 저장소 로컬 체크아웃 `8a2ac7f`에서 피처·리포트·스켈레톤·결과 영상 소비 경로를 읽었다. 현재 후처리는 `pose_predictions.json`, `details.json`, `user_info.json`을 사용하며 결과 MP4를 다시 렌더링하지 않는다. 따라서 RunPod은 검출·자세 추정·추적·렌더링·NVENC까지의 `video_analysis`를 맡고, OCI는 피처·리포트·스켈레톤 어댑터를 수행하는 경계를 후보로 정했다. 실행 중인 OCI와 원격 최신 버전 일치는 배포 전에 다시 확인한다.
+
+## 18. Object Storage 계약 v2
+
+서비스 Job ID와 GPU 시도 ID를 분리하고 입력·모델·소스 해시, 시도별 결과 prefix와 완료 manifest 형식을 정의했다. RunPod은 자세 JSON·영상 정보 JSON·완성 영상을 모두 올린 뒤 manifest를 마지막에 게시한다. OCI는 manifest 문자열만 믿지 않고 요청 일치, 객체 크기·해시, JSON 내용과 영상 메타데이터를 확인한다.
+
+## 19. 후처리 및 RunPod 게시 후보 구현
+
+OCI 후처리 후보는 HPE를 다시 실행하지 않고 feature, 계약 검사, 선택적 Agent, report adapter, skeleton adapter를 호출한다. 완성 영상은 무결성·형식 확인 후 원래 Object Storage 경로를 재사용한다. RunPod 후보는 warm CUDA 엔진과 NVENC를 사용하고 세 산출물 이후 manifest를 게시한다. 입력 손상, CPU provider, 누락 산출물에서는 완료 manifest를 게시하지 않는다.
+
+## 20. OCI dispatcher 후보
+
+OCI Pod transport 후보는 HTTPS Authorization 헤더로 계약 요청을 전달하고, 응답의 Job ID·시도 ID·manifest 경로가 모두 일치할 때만 후처리 대상으로 반환한다. 자동 POST 재시도는 넣지 않았다. DB 상태를 가진 Celery 계층이 현재 시도를 조건부 생성하고 재시도마다 새 attempt ID를 발급해야 한다. 이 시점의 구현은 로컬 단위 시험 20개를 통과했으며 실제 OCI·RunPod·사이트·Grafana 통합 결과는 아니다.
+
+## 21. 팀 DB·Celery 통합 후보와 릴리스 자기검증
+
+격리된 팀 저장소 worktree에 입력 ETag·크기 snapshot, GPU attempt migration, `gpu_dispatch`와 `postprocess` 큐, HPE를 호출하지 않는 후처리 전용 진입점을 연결했다. Worker 테스트 33개와 변경 관련 API DB 테스트 18개, Compose·Python·셸 구문 검사를 통과했다. RunPod API도 시작 시 실제 HPE 소스 3개와 ONNX 2개의 SHA-256을 계산하고 요청의 릴리스 증거와 일치하지 않으면 실행 전에 거부하도록 보강했으며 공개 후보 전체 단위 시험은 21개를 통과했다. 실제 OCI migration, Object Storage 왕복, CUDA 실행, 사이트·Grafana 검증은 아직 수행하지 않았다.

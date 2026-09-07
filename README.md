@@ -24,6 +24,14 @@ CPU 개선은 OpenCV 중간 영상을 제거하고 렌더링 프레임을 FFmpeg
 
 ## 폴더
 
+후속 구현: [후처리 전용 실행과 Object Storage 연결](docs/POSTPROCESS_IMPLEMENTATION.md). 로컬 검증을 마친 통합 후보이며 실제 OCI·RunPod·사이트 배포 검증은 남아 있다.
+
+RunPod 게시 경로: [Object Storage API 후보](docs/RUNPOD_STORAGE_API.md). warm CUDA 분석과 NVENC 결과를 계약 v2 manifest로 게시하도록 구성했다.
+
+OCI 요청 경로: [OCI→RunPod dispatcher 후보](docs/OCI_DISPATCHER.md). 서비스 Job과 GPU 시도를 분리하고 일치하는 manifest 응답만 후처리로 넘긴다.
+
+후속 정식 통합 설계: [Object Storage 기반 요청·manifest 계약 v2](docs/OBJECT_STORAGE_CONTRACT.md). 현재는 계약과 메타데이터 검증 코드까지 작성한 단계이며, 기존 성능 수치는 새 경로의 운영 측정값이 아니다.
+
 - `src/cpu`: CPU 직접 스트리밍 후보 코드
 - `src/runpod`: RunPod 분석 API, 계약 검증, warm 모델 프로세스
 - `benchmarks`: CPU 격리 시험과 OCI→RunPod 왕복 측정
