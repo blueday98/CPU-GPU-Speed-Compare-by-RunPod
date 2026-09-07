@@ -1,0 +1,84 @@
+{
+  "scope": "isolated OCI CPU benchmark; production container unchanged",
+  "worker_image": "ghcr.io/temu-f4/runners-feed-coach-worker:sha-d3753fc9c2c28c22492542e35d3f3cdb7c34534c",
+  "change": "replace intermediate OpenCV mp4v plus final libx264 pass with direct raw-frame libx264 veryfast CRF23 streaming",
+  "inputs": {
+    "720p_60fps_crf18": {
+      "filename": "720p_60fps_crf18.mp4",
+      "sha256": "edd0704b6ab0e88054984f74b53f74688e12c483ecf2519e360e72b7021c2e9e"
+    },
+    "treadmill_30fps_720p": {
+      "filename": "treadmill_30fps_720p.mp4",
+      "sha256": "fd032ce8141c8df25ec776c91bb35d23864b48cb8ab3a98463a0372978feaa85"
+    }
+  },
+  "candidate_sha256": "9b7d0b1c1a41f72b7a20a8883f9cf8b7914facc0db411c862ae88a1ac2d7be14",
+  "results": {
+    "720p_60fps_crf18": {
+      "baseline_trials_seconds": [
+        17.112604,
+        16.639868
+      ],
+      "candidate_trials_seconds": [
+        12.742122,
+        12.597889
+      ],
+      "baseline_median_seconds": 16.876236,
+      "candidate_median_seconds": 12.6700055,
+      "saved_seconds": 4.206230499999998,
+      "reduction_percent": 24.923984826948374,
+      "predictions_exact": true,
+      "prediction_sha256": "fde3c8313c3085c32555a5a089b6d3b4d4f7d285304c89769e899cb33778bf8a",
+      "candidate_video": {
+        "codec_name": "h264",
+        "width": 1280,
+        "height": 720,
+        "pix_fmt": "yuv420p",
+        "r_frame_rate": "60/1",
+        "duration": "4.250000",
+        "nb_frames": "255"
+      },
+      "baseline_rendered_bytes": [
+        2733281,
+        2733281
+      ],
+      "candidate_rendered_bytes": [
+        1771402,
+        1771402
+      ]
+    },
+    "treadmill_30fps_720p": {
+      "baseline_trials_seconds": [
+        83.161553,
+        83.540159
+      ],
+      "candidate_trials_seconds": [
+        73.984715,
+        73.94561
+      ],
+      "baseline_median_seconds": 83.350856,
+      "candidate_median_seconds": 73.96516249999999,
+      "saved_seconds": 9.385693500000002,
+      "reduction_percent": 11.260464439621355,
+      "predictions_exact": true,
+      "prediction_sha256": "9cc882e5f18b13069801ffdaf78b53c8a1291bf01fae0fa4835b8d5aa511f069",
+      "candidate_video": {
+        "codec_name": "h264",
+        "width": 1280,
+        "height": 720,
+        "pix_fmt": "yuv420p",
+        "r_frame_rate": "30000/1001",
+        "duration": "21.054367",
+        "nb_frames": "631"
+      },
+      "baseline_rendered_bytes": [
+        5961560,
+        5961560
+      ],
+      "candidate_rendered_bytes": [
+        4542794,
+        4542794
+      ]
+    }
+  }
+}

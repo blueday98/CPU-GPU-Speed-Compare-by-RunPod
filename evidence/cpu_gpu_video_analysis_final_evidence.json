@@ -1,0 +1,196 @@
+{
+  "scope": "isolated benchmark; Runner's Feed production, DB, and Grafana unchanged",
+  "comparison_path": "OCI CPU versus OCI-to-RunPod HTTP roundtrip",
+  "gpu": "NVIDIA RTX 2000 Ada Generation",
+  "gpu_execution": "persistent warm CUDA model process plus h264_nvenc p4 cq23",
+  "results": {
+    "720p_60fps_crf18": {
+      "cpu_original_median_seconds": 16.876236,
+      "cpu_optimized_median_seconds": 12.6700055,
+      "gpu_roundtrip_trials_seconds": [
+        8.647657,
+        8.899037
+      ],
+      "gpu_roundtrip_median_seconds": 8.773347000000001,
+      "gpu_analysis_trials_seconds": [
+        2.826448286010418,
+        2.865659016009886
+      ],
+      "gpu_nvenc_trials_seconds": [
+        0.8356339320307598,
+        0.8459428549977019
+      ],
+      "original_cpu_to_gpu_saved_seconds": 8.102888999999998,
+      "original_cpu_to_gpu_reduction_percent": 48.01360327030268,
+      "optimized_cpu_to_gpu_saved_seconds": 3.896658499999999,
+      "optimized_cpu_to_gpu_reduction_percent": 30.754986649374377,
+      "gpu_trials_prediction_exact": true,
+      "gpu_prediction_sha256": [
+        "e4be3df133a349dfb0649a92d0c9720449f305549a9f1732642c2965dfcc4c13",
+        "e4be3df133a349dfb0649a92d0c9720449f305549a9f1732642c2965dfcc4c13"
+      ],
+      "cpu_gpu_prediction_comparisons": [
+        {
+          "cpu_frames": 78,
+          "gpu_frames": 78,
+          "only_cpu_frames": [],
+          "only_gpu_frames": [],
+          "people_count_mismatch_frames": [],
+          "joints_compared": 2106,
+          "mean_joint_distance_px": 0.14249564643081283,
+          "max_joint_distance_px": 22.127377547202798,
+          "p95_joint_distance_px": 0.746860748206893,
+          "p99_joint_distance_px": 0.8001713230633345,
+          "joints_over_5px": 2,
+          "joints_over_10px": 2,
+          "confident_joints_compared": 2082,
+          "confident_mean_joint_distance_px": 0.1290338297693517,
+          "confident_max_joint_distance_px": 12.568394705416978,
+          "confident_p95_joint_distance_px": 0.746684081757939,
+          "confident_p99_joint_distance_px": 0.7964156684277022,
+          "confident_joints_over_5px": 1,
+          "confident_joints_over_10px": 1,
+          "mean_score_absolute_difference": 0.0006418575277129243,
+          "max_score_absolute_difference": 0.008157849311828613
+        },
+        {
+          "cpu_frames": 78,
+          "gpu_frames": 78,
+          "only_cpu_frames": [],
+          "only_gpu_frames": [],
+          "people_count_mismatch_frames": [],
+          "joints_compared": 2106,
+          "mean_joint_distance_px": 0.14249564643081283,
+          "max_joint_distance_px": 22.127377547202798,
+          "p95_joint_distance_px": 0.746860748206893,
+          "p99_joint_distance_px": 0.8001713230633345,
+          "joints_over_5px": 2,
+          "joints_over_10px": 2,
+          "confident_joints_compared": 2082,
+          "confident_mean_joint_distance_px": 0.1290338297693517,
+          "confident_max_joint_distance_px": 12.568394705416978,
+          "confident_p95_joint_distance_px": 0.746684081757939,
+          "confident_p99_joint_distance_px": 0.7964156684277022,
+          "confident_joints_over_5px": 1,
+          "confident_joints_over_10px": 1,
+          "mean_score_absolute_difference": 0.0006418575277129243,
+          "max_score_absolute_difference": 0.008157849311828613
+        }
+      ],
+      "final_encoder": [
+        "h264_nvenc",
+        "h264_nvenc"
+      ],
+      "final_video_bytes": [
+        5778149,
+        5778149
+      ],
+      "output_video_validated_twice": true,
+      "output_video_metadata": {
+        "codec_name": "h264",
+        "width": 1280,
+        "height": 720,
+        "pix_fmt": "yuv420p",
+        "r_frame_rate": "60/1",
+        "duration": "4.250000",
+        "nb_frames": "255"
+      }
+    },
+    "treadmill_30fps_720p": {
+      "cpu_original_median_seconds": 83.350856,
+      "cpu_optimized_median_seconds": 73.96516249999999,
+      "gpu_roundtrip_trials_seconds": [
+        17.760351,
+        17.16248
+      ],
+      "gpu_roundtrip_median_seconds": 17.4614155,
+      "gpu_analysis_trials_seconds": [
+        10.658268845989369,
+        10.530093270994257
+      ],
+      "gpu_nvenc_trials_seconds": [
+        1.0273213579785079,
+        1.0403215189580806
+      ],
+      "original_cpu_to_gpu_saved_seconds": 65.88944049999999,
+      "original_cpu_to_gpu_reduction_percent": 79.05070644985337,
+      "optimized_cpu_to_gpu_saved_seconds": 56.50374699999999,
+      "optimized_cpu_to_gpu_reduction_percent": 76.39237864176935,
+      "gpu_trials_prediction_exact": true,
+      "gpu_prediction_sha256": [
+        "a35b84edb93b2cd36e4d4b7bd6ae8e9d2d6f3c5711743f77e011e7976935c7da",
+        "a35b84edb93b2cd36e4d4b7bd6ae8e9d2d6f3c5711743f77e011e7976935c7da"
+      ],
+      "cpu_gpu_prediction_comparisons": [
+        {
+          "cpu_frames": 631,
+          "gpu_frames": 631,
+          "only_cpu_frames": [],
+          "only_gpu_frames": [],
+          "people_count_mismatch_frames": [
+            349
+          ],
+          "joints_compared": 21216,
+          "mean_joint_distance_px": 0.4159269659034972,
+          "max_joint_distance_px": 284.88762811995275,
+          "p95_joint_distance_px": 1.1107913369779812,
+          "p99_joint_distance_px": 1.6575608824156036,
+          "joints_over_5px": 58,
+          "joints_over_10px": 43,
+          "confident_joints_compared": 19219,
+          "confident_mean_joint_distance_px": 0.3184000572136128,
+          "confident_max_joint_distance_px": 284.88762811995275,
+          "confident_p95_joint_distance_px": 1.1073208575041207,
+          "confident_p99_joint_distance_px": 1.5442361413836476,
+          "confident_joints_over_5px": 12,
+          "confident_joints_over_10px": 9,
+          "mean_score_absolute_difference": 0.0016395653026293666,
+          "max_score_absolute_difference": 0.0700678825378418
+        },
+        {
+          "cpu_frames": 631,
+          "gpu_frames": 631,
+          "only_cpu_frames": [],
+          "only_gpu_frames": [],
+          "people_count_mismatch_frames": [
+            349
+          ],
+          "joints_compared": 21216,
+          "mean_joint_distance_px": 0.4159269659034972,
+          "max_joint_distance_px": 284.88762811995275,
+          "p95_joint_distance_px": 1.1107913369779812,
+          "p99_joint_distance_px": 1.6575608824156036,
+          "joints_over_5px": 58,
+          "joints_over_10px": 43,
+          "confident_joints_compared": 19219,
+          "confident_mean_joint_distance_px": 0.3184000572136128,
+          "confident_max_joint_distance_px": 284.88762811995275,
+          "confident_p95_joint_distance_px": 1.1073208575041207,
+          "confident_p99_joint_distance_px": 1.5442361413836476,
+          "confident_joints_over_5px": 12,
+          "confident_joints_over_10px": 9,
+          "mean_score_absolute_difference": 0.0016395653026293666,
+          "max_score_absolute_difference": 0.0700678825378418
+        }
+      ],
+      "final_encoder": [
+        "h264_nvenc",
+        "h264_nvenc"
+      ],
+      "final_video_bytes": [
+        12002993,
+        12002993
+      ],
+      "output_video_validated_twice": true,
+      "output_video_metadata": {
+        "codec_name": "h264",
+        "width": 1280,
+        "height": 720,
+        "pix_fmt": "yuv420p",
+        "r_frame_rate": "2997/100",
+        "duration": "21.054388",
+        "nb_frames": "631"
+      }
+    }
+  }
+}

@@ -1,0 +1,21 @@
+OCI model metadata read-only check
+Checked: 2026-09-07 Asia/Seoul
+
+detector:
+  size: 4087779
+  mtime_utc: 2026-08-25 07:48:52.000000000 +0000
+  ctime_utc: 2026-08-25 16:17:55.958437180 +0000
+  birth_utc: 2026-08-25 16:17:55.724432585 +0000
+  sha256: dae7d98b247441ec4e408381c72087be5bbf325df939704bb978e21725a948ea
+
+pose:
+  size: 56243911
+  mtime_utc: 2026-08-25 07:48:52.000000000 +0000
+  ctime_utc: 2026-08-25 16:18:04.808610985 +0000
+  birth_utc: 2026-08-25 16:18:02.082557450 +0000
+  sha256: f43e623a47dd21e465d1f4e7b3083e99c589cd4048958b152d650b27732e6946
+
+model_root_birth_utc: 2026-08-25 16:17:48.444289614 +0000
+worker_mount: host model root -> /workspace/models
+worker_mount_read_write: false
+host_and_worker_hashes_match: true
