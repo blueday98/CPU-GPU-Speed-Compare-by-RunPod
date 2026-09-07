@@ -67,3 +67,13 @@ CPU 후보의 `libx264 CRF23`과 GPU의 `h264_nvenc CQ23`은 이름이 비슷해
 ## 운영 안정화 결과
 
 후속 팀 저장소 PR #26과 릴리스 `sha-0418518c7844fe6279f8f0761c8ba9c827cf60fe`에서 운영 배포의 Docker 디스크 guard와 멱등 systemd 동기화를 적용했다. 네 운영 timer가 모두 `enabled`·`active`이며, 새 Release workflow는 마지막 systemd 단계까지 전체 성공했다. RunPod API도 같은 릴리스 값으로 재기동한 뒤 GPU·CUDA provider와 `video-analysis-request-2.0` health를 확인했다.
+
+## 추가 운영 입력 결과
+
+| 입력 | 총 처리시간 | 큐 대기 | 가장 느린 단계 |
+|---|---:|---:|---|
+| 동일 720p·60fps·255프레임 반복 | 24.8초 | 111.164ms | `video_analysis` 4.8초 |
+| 720p·25fps·136프레임 | 18.8초 | 45.934ms | 입력 다운로드 3.0초 |
+| 720p·30fps·1,105프레임·36.83초 | 44.1초 | 34.492ms | `video_analysis` 17.6초 |
+
+동일 60fps 입력의 이전 총 처리시간 24.6초와 반복 24.8초 차이는 0.2초, 약 0.8%였다. 새 릴리스의 운영 표본 세 건은 모두 성공했으며 평균 처리시간은 약 29.22초였다. 짧은 입력은 고정 네트워크·다운로드 비용의 비중이 크고, 긴 입력은 GPU `video_analysis` 시간이 주 병목으로 나타났다.

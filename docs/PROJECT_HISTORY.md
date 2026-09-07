@@ -289,3 +289,15 @@ OCI 관리자 동기화 후 다음 timer가 모두 `enabled`와 `active`임을 �
 - `runners-feed-model-quality-watchdog.timer`
 
 PR #26은 필수 검사 6개를 통과한 뒤 `main` 병합 커밋 `0418518c7844fe6279f8f0761c8ba9c827cf60fe`가 됐다. 해당 릴리스는 이미지 build·test·push, OCI 불변 릴리스 배포, 운영 checkout 승격과 마지막 systemd 동기화까지 모두 성공했다. RunPod API도 같은 `MODEL_RELEASE`로 재기동하고 CUDA health 응답을 확인했다.
+
+## 24. 운영 입력 확대 시험
+
+릴리스 `sha-0418518c7844fe6279f8f0761c8ba9c827cf60fe`에서 서로 다른 길이와 FPS의 운영 입력 세 건을 순차 실행했다. `GPU_DISPATCH_CONCURRENCY=1`을 유지해 동시 작업 간 자원 경합을 피했다.
+
+| 분석 이름 | 입력 | Job ID | 결과 | 총 처리 | 큐 대기 | 확인된 병목 |
+|---|---|---|---|---:|---:|---|
+| `runpod-repeat-60fps-01` | 720p·60fps·255프레임 | `d35e671e-b616-4f16-9f25-10e2df91ea13` | SUCCESS | 24.8초 | 111.164ms | `video_analysis` 4.8초 |
+| `runpod-women-25fps-01` | 720p·25fps·136프레임 | `fd984206-62e3-4038-b106-665ee94ef544` | SUCCESS | 18.8초 | 45.934ms | 입력 다운로드 3.0초 |
+| `runpod-prorunner-30fps-38s-01` | 720p·30fps·1,105프레임 | `20260813-ac64-4a19-bb02-37c8c9d9859b` | SUCCESS | 44.1초 | 34.492ms | `video_analysis` 17.6초 |
+
+세 작업 모두 사이트 완료, Object Storage 왕복, OCI 후처리와 Grafana 9단계 계측을 통과했다. 새 릴리스 품질 창은 완료 3건, 성공 3건, 실패 0건, 성공률 100%, 평균 처리시간 약 29.22초를 기록했다. 짧은 25fps 입력에서는 GPU 계산보다 입력 다운로드가 더 오래 걸렸고, 36.83초 입력에서는 `video_analysis`가 가장 느린 단계였다.
