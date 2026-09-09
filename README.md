@@ -79,3 +79,29 @@ CPU 격리 시험 이미지는 `sha-d3753fc9...`였고 현재 운영 통합 검�
 모델 가중치, 원본 영상, 인증 토큰과 SSH 키는 저장소에 포함하지 않는다. 기반 코드와 모델을 공개할 때는 원본 저장소의 라이선스도 확인해야 한다.
 
 개인 GitHub 게시 절차는 `docs/GITHUB.md`, 재현 조건은 `docs/REPRODUCE.md`에 정리했다. 코드 출처와 공개 범위는 `NOTICE.md`를 따른다.
+
+
+## 2026-09-10 팀 저장소 후속 반영과 결론
+
+초기 Object Storage 기반 RunPod 통합 변경은 팀의 브랜치 운영 원칙보다 먼저 `main`에 병합되어 [PR #28](https://github.com/Temu-F4/Runners_Feed/pull/28)에서 revert했다. 이 revert는 구현 방향을 폐기한 것이 아니라, 검토와 적용 순서를 다시 맞추기 위해 운영 브랜치에서 변경을 회수한 것이다.
+
+이후 RunPod이 전체 `video_analysis`를 처리하고 OCI가 작업 조정·후처리·결과 제공을 담당한다는 경계를 유지하면서, 상시 Pod용 비동기 영상 분석 서버를 `feature/blueday98-runpod-async-server` 브랜치에 다시 구현했다.
+
+내가 작성한 주요 기능은 다음과 같다.
+
+- `POST /v4/storage-video-analysis` 작업 등록과 HTTP 202 응답
+- `remote_job_id` 기반 비동기 polling 및 `queued`·`running`·`complete`·`failed` 상태 계약
+- 동일 `attempt_id` 재전달 시 기존 작업을 재사용하는 중복 추론 방지
+- SQLite 기반 작업 상태 보존과 Bearer token 인증
+- HPE·추적·보간·렌더링 및 NVENC H.264 변환
+- OCI Object Storage 산출물 업로드와 CUDA·모델 release 증거를 포함한 manifest 생성
+
+해당 구현은 `aca584a`(`feat: add async RunPod video analysis server`)와 `c51a3f5`(`Add README for RunPod video analysis server`)로 확인할 수 있으며, [PR #34](https://github.com/Temu-F4/Runners_Feed/pull/34)를 통해 팀 저장소 `main`에 정식 병합됐다.
+
+병합 이후 팀원들은 GPU attempt·DB 상태 계약, model canary, RunPod polling 간격, 모델 통합 및 rtmlib 호환성을 후속 보완했다. 특히 polling 단축은 [PR #39](https://github.com/Temu-F4/Runners_Feed/pull/39), RunPod hardening은 [PR #33](https://github.com/Temu-F4/Runners_Feed/pull/33), 후속 모델·호환성 보완은 PR #40~#43의 팀 작업으로 이어졌다. 이 후속 변경 전체를 내가 단독으로 구현한 것으로 보지 않는다.
+
+최종적으로 실제 앱의 목표 경로는 다음과 같다.
+
+`모바일 앱 → OCI API·Celery → RunPod 비동기 video_analysis → OCI Object Storage manifest → OCI 후처리 → 모바일 결과`
+
+**결론:** 초기 통합은 적용 절차 문제로 revert했지만, 성능 시험에서 정한 구조를 비동기 RunPod 영상 분석 서버로 다시 구현했고 그 코드가 PR #34를 통해 팀 저장소에 정식 반영됐다. 따라서 이 작업의 핵심 성과는 단순한 CPU·GPU 속도 비교가 아니라, 전체 `video_analysis`를 RunPod GPU로 분리하는 설계·성능 검증·비동기 서버 구현을 실제 팀 통합의 기반으로 연결한 것이다. 운영 안정화와 후속 모델 변경은 이후 팀 공동 작업으로 완성됐다.
